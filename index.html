@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item </title>
+    <!-- CSS only -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <link rel="manifest" href="manifest.json">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+    <style>
+        .card { 
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .card-body {
+            padding: 2em;
+        }
+
+        .card-img-top{
+            display: inline; 
+            max-width: 15rem; 
+            height: 250px;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <div id="list" class="p-5">
+
+    
+        <!-- Filter Section -->
+       
+             <form  style="position: fixed; top: 0; left: 0; z-index: 1000; border:2px dotted white;" class="d-inline-flex container-fluid bg-dark text-light p-3 mb-5">
+                <select v-model="filterValue"  class="form-select" aria-label="Filter By">
+                    <option disabled selected>Filter By</option>
+                    <option value="subject" selected>Subject</option>
+                    <option value="location">Location</option>
+                    <option value="price">Price</option>
+                    <option value="stock">Spaces Available</option>
+                  </select>
+
+                <div class="form-check">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" v-model="checkBox" type="radio" name="inlineRadioOptions" id="asc-radio" value="asc" checked>
+                    <label class="form-check-label" for="inlineRadio1">Ascending</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" v-model="checkBox"  type="radio" name="inlineRadioOptions" id="desc-radio" value="desc" >
+                    <label class="form-check-label" for="inlineRadio2">Descending</label>
+                  </div>
+                </div>
+                <input class="form-control me-2" v-model="searchQuery" type="search" placeholder="Search..." aria-label="Search">
+              </form>
+
+              <!-- Modal -->
+              <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h1 class="modal-title fs-5" id="staticBackdropLabel">Order Confirmation</h1>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      Order Confirmed
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button type="button" class="btn btn-primary">Understood</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+       
+
+        <!-- Courses Section -->
+         <div class="row mt-5">
+        
+            <div class="col-lg-3 col-md-6 col-sm-12 card-group" v-for="item in filteredProducts">
+
+                <div class="card mb-3 bg-dark text-light" >
+                    
+                        <div class="row">
+                            <img :src="item.image_url" class="img-responsive img-rounded p-3 mt-3 card-img-top mx-auto" alt="...">
+                        </div>
+                        <div class="row">
+                            <div class="card-body">
+                                <h5 class="card-title" style="font-weight: bolder;">{{ item.subject }}</h5>
+                                <p class="">{{ item.description }}</p>
+                                <p><span style="font-size:large ;"
+                                        :class="item.stock > 5 ? 'text-success' : 'text-danger' ">{{ item.stock }}</span>
+                                    spaces left!</p>
+    
+                                    <button @click="addToCart(item.subject)" :disabled="item.stock <= 0" class="btn btn-outline-light">Add To Cart </button>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <p class="card-text text-success" style="font-weight: bold; font-size: large;">
+                                            &pound;{{
+                                            item.price }}</p>
+                                    </div>
+                                    <div class="col-6">
+                                        <p class="card-text" style="font-weight:bold; float:right ;"><i
+                                                class="bi bi-geo-alt"></i> <em class="">{{ item.location }}</em> </p>
+                                    </div>
+                                </div>
+    
+    
+                            </div>
+                        </div>
+                    
+                </div>
+    
+            </div>
+    
+         </div>
+        
+       
+
+         <hr>
+
+
+         <!-- Cart Section -->
+
+         <div class="row mt-5">
+
+            
+            <h1 style="text-align: center;">CART ({{ cartCount }})</h1>
+            <div style="text-align: center;" v-if="cartCount == 0">
+                <h2 class="text-muted">No Items in Cart</h2>
+            </div>
+
+            <div class="col-lg-4 col-md-6 col-sm-12 mt-3" v-for="item in cart" >
+    
+            <div v-show="item.quantity > 0">
+
+                <div class="card mb-3 bg-dark text-light position-relative">
+                    
+                        <div class="row">
+                            <img :src="item.image_url" class="img-responsive img-rounded p-3 mt-3 card-img-top mx-auto" alt="...">
+                        </div>
+                        <div class="row">
+                            <div class="card-body">
+                                <h5 class="card-title" style="font-weight: bolder;">{{ item.subject }}</h5>
+                                <p class="">{{ item.description }}</p>
+                                <p><span style="font-size:large ;">
+                                    <nav aria-label="...">
+                                        <ul class="pagination pagination-sm">
+                                          <li class="page-item" aria-current="page">
+                                            <button @click="modifyCart(item.subject,'-')" :disabled="item.quantity == 0" class="btn btn-light btn-sm">-</button>
+                                          </li>
+                                          <li class="page-item active px-2 mt-1">
+                                            {{ item.quantity }}
+                                        </li>
+                                          <li class="page-item">
+                                            <button @click="modifyCart(item.subject,'+')" :disabled="item.quantity >= item.total_stock"  class="btn btn-light btn-sm">+</button>
+                                        </li>
+                                        </ul>
+                                      </nav>
+                                   
+                                    <span class=""></span>
+                                </p>
+    
+                                   
+                                <hr>
+                                <div class="row">
+                                    <div class="col">
+                                        <p class="card-text text-success" style="font-weight: bold; font-size: large;">
+                                            &pound;{{
+                                            item.price }}</p>
+                                    </div>
+                                    <div class="col">
+                                        <p class="card-text" style="font-weight:bold; float:right ;"><i
+                                                class="bi bi-geo-alt"></i> <em class="">{{ item.location }}</em> </p>
+                                    </div>
+                                </div>
+    
+    
+                            </div>
+                        </div>
+                   
+                </div>
+            </div>
+
+            
+    
+            </div>
+    
+         </div>
+
+         <hr>
+         <!-- Checkout Section -->
+         <div class="row mt-5">
+
+            <h1 style="text-align: center;">Check Out</h1>
+
+            <div class="row" @change.prevent="formCheck">
+                <div class="col">
+                  <input type="text" v-model="CO_name" class="form-control" placeholder="Full Name" aria-label="Full name">
+                </div>
+                <div class="col">
+                  <input type="number" v-model="CO_phone" class="form-control" placeholder="Phone Number" aria-label="Number">
+                </div>
+                <button class="btn btn-dark col" data-bs-toggle="modal" data-bs-target="#staticBackdrop" id="btn_order" disabled>Confirm Order</button>
+              </div>
+              
+         </div>
+
+
+    </div>
+
+
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+   
+
+    <!-- JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+        crossorigin="anonymous"></script>
+     <script src="courses.js"></script>   
+    <script>
+
+        const { createApp } = Vue
+       
+
+        createApp({
+            mounted() {
+                this.cart = [...this.items];
+                this.cart.forEach(element => {
+                    element['quantity'] = null;
+                });
+                console.log(this.cart);
+            },
+
+            created() {
+                if('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js')
+                    .then((reg) => console.log('service worker registered', reg))
+                    .catch((err) => console.log('service worker not registered', err))
+                }
+            },
+            
+            data() {
+                return {
+                    items: lessons,
+                    cart: [],
+
+                    //filters
+                    filterValue: null,
+                    checkBox: 'asc',
+                    searchQuery: "",
+
+                    CO_name:'',
+                    CO_phone:null,
+                    CO_disabled: true,
+                }
+            },
+            methods: {
+                addToCart(subject){
+
+                    //find entire object and push to cart array
+                    let result = this.items.findIndex((obj => obj.subject == subject));
+                    this.items[result].stock--; 
+
+                    //increment the quantity
+                    let cartItem = this.cart.findIndex((obj => obj.subject == subject));
+                    this.cart[cartItem].quantity++;
+
+                },
+
+                //method for changing items in cart (+ or - quantity)
+                modifyCart(subject, operation){
+                    let result = this.items.findIndex((obj => obj.subject == subject));
+                    let cartItem = this.cart.findIndex((obj => obj.subject == subject));
+
+                    if(operation == "+"){
+                    
+                        //decrease stock   
+                        this.items[result].stock--; 
+
+                        //increment the quantity
+                        this.cart[cartItem].quantity++;
+
+                    }
+
+                    else if(operation == "-"){
+
+                        //decrease stock 
+                        this.items[result].stock++; 
+
+                        //increment the quantity
+                        this.cart[cartItem].quantity--;
+
+                    }
+                },
+
+                
+            },
+            computed:{
+                cartCount(){
+                    return this.cart.filter(obj => obj.quantity > 0).length;
+                },
+                filteredProducts(){
+                    if(this.searchQuery == "" && this.filterValue == null){
+                        return this.items;
+                    }
+                    else{
+                        if(this.filterValue == 'subject' || this.filterValue == 'location'){
+                            if(this.checkBox == "asc"){
+                                return ( this.items.filter((obj) => obj.subject.toLowerCase().includes(this.searchQuery.toLowerCase()) 
+                                || obj.description.toLowerCase().includes(this.searchQuery.toLowerCase())).sort((a,b) => a[this.filterValue].toLowerCase() < b[this.filterValue].toLowerCase() ? -1 : 0) );
+                            }
+                            else if(this.checkBox == "desc"){
+                                return ( this.items.filter((obj) => obj.subject.toLowerCase().includes(this.searchQuery.toLowerCase()) 
+                                || obj.description.toLowerCase().includes(this.searchQuery.toLowerCase())).sort((a,b) => b[this.filterValue].toLowerCase() < a[this.filterValue].toLowerCase() ? -1 : 0) );
+                            }
+                        }
+                        else{
+                            if(this.checkBox == "asc"){
+                                return this.items.filter((obj) => obj.subject.toLowerCase().includes(this.searchQuery.toLowerCase()) 
+                                || obj.description.toLowerCase().includes(this.searchQuery.toLowerCase())).sort((a,b) => a[this.filterValue] - b[this.filterValue]);
+                            }
+                            else if(this.checkBox == "desc"){
+                                return this.items.filter((obj) => obj.subject.toLowerCase().includes(this.searchQuery.toLowerCase()) 
+                                || obj.description.toLowerCase().includes(this.searchQuery.toLowerCase())).sort((a,b) => b[this.filterValue] - a[this.filterValue]);
+                            }
+                        }
+                    }
+                },
+                formCheck(){
+                    if(this.CO_name !== '' && this.CO_phone != '' && this.cartCount > 0){
+                        //checking if it is all letters
+                        //if(/^[A-Za-z]*$/.test(this.CO_name)){
+                            document.getElementById("btn_order").disabled = false;
+                        //}
+                    }
+                    
+                }
+            }
+        }).mount('#list')
+    </script>
+
+</body>
+
+</html>
